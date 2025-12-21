@@ -1,10 +1,14 @@
-import bcrypt from 'bycrypt';
-import prisma from '@prisma/client';
-
-const prisma = new PrismaClient();
+import bcrypt from 'bcrypt';
+import prisma from '../prisma.js';
 
 export const register = async (req, res)=>{
     try{
+
+        // Validate request body
+        if (!req.body) {
+            return res.status(400).json({ message: "Request body is missing" });
+        }
+
         const {name,email,password}=req.body;
 
         // 1. Check if all fields are provided
@@ -20,7 +24,7 @@ export const register = async (req, res)=>{
         // 3. Check if user already exists
         const existingUser = await prisma.user.findUnique({where:{email}});
         if(existingUser){
-            return res.status(400).json({message:"User already exists"});
+            return res.status(400).json({message:"User already exists with this email"});
         }
 
         // 4. For new user Hash the password with 'bcrypt' and salt rounds of 10
