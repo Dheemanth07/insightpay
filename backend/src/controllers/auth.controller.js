@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import prisma from '../prisma.js';
+import { signinToken } from '../utils/jwt.js';
 
 export const register = async (req, res)=>{
     try{
@@ -44,6 +45,45 @@ export const register = async (req, res)=>{
         return res.status(201).json({message:"User registered successfully", user});
     }catch(err){
         console.error("Error during registration:", err);
+        return res.status(500).json({message:"Internal server error"});
+    }
+}
+
+export const login = async (req,res)=>{
+    try{
+        // Validate request body
+        if(!req.body){
+            return res.status(400).json({message:"Request body is missing"});
+        }
+
+        const{email,password}=req.body;
+
+        // 1. Check if all fields are provided
+        if(!email || !password){
+            return res.status(400).json({message:"All fields are required"});
+        }
+
+        // 2. Check if user exists
+        const user = await prisma.user.findUnique({where:{email}});
+
+        if(!user){
+            return res.status(401).json({message:"User does not exist with email"});
+        }
+
+        // 3. Compare provided password with stored hashed password
+        const isMatch = await bcrypt.compare(password,user.password);
+
+        if(!isMatch){
+            return res.status(401).json({message:"Invalid password"});
+        }
+
+        // 4. Generate JWT token
+        const token = signinToken({id:user.id,email:user.email});
+
+        // 5. Return success response with token
+        return res.status(200).json({message:"Login successful", token,user});
+    }catch(err){
+        console.error("Login error: ", err);
         return res.status(500).json({message:"Internal server error"});
     }
 }
