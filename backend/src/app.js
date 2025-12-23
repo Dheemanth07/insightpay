@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import authRoutes from "./routes/auth.routes.js";
+import walletRoutes from "./routes/wallet.routes.js";
 
 const app = express();
 
@@ -14,5 +15,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/auth", authRoutes);
+
+app.use("/wallet", walletRoutes);
 
 export default app;
