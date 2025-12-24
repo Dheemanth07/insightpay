@@ -1,9 +1,11 @@
 import express from "express";
-import { addMoney } from "../controllers/wallet.controller.js";
+import { addMoney,sendMoney,getTransactionHistory } from "../controllers/wallet.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
 router.post("/add", authMiddleware, addMoney);
+router.post("/send", authMiddleware, sendMoney);
+router.get("/transactions",authMiddleware,getTransactionHistory);
 
 export default router;
