@@ -37,6 +37,10 @@ model Transaction{
   toUserId Int?
   toUser User? @relation("ReceivedTransactions",fields: [toUserId],references: [id])
   createdAt DateTime @default(now())
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([createdAt])
 }
 
 enum TxnType{

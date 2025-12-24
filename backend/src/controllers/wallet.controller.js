@@ -74,20 +74,20 @@ export const getTransactionHistory = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
+        const cursor = req.query.cursor ? Number(req.query.cursor) : null;
+        const type = req.query.type;
+        const from = req.query.from;
+        const to = req.query.to;
 
-        if (page <= 0 || limit <= 0)
-            return res.status(400).json({ message: "Invalid pagination" });
-
-        const result = await getTransactionHistoryService(userId, page, limit);
+        const result = await getTransactionHistoryService(userId, limit,cursor,type,from,to);
 
         return res.status(200).json({
             message: "Transaction history fetched successfully",
             result,
         });
     } catch (err) {
-        console.error("Transaction history error:", err);
+        console.error("History API error:", err);
         return res
             .status(500)
             .json({ message: "Failed to fetch transaction history" });

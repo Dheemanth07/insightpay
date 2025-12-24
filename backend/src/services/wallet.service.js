@@ -71,37 +71,48 @@ export const sendMoneyService = async (senderId, receiverId, amount) => {
     });
 };
 
-export const getTransactionHistoryService = async (userId, page, limit) => {
-    // 1. Calculate offset
-    const skip = (page - 1) * limit;
+export const getTransactionHistoryService = async (
+    userId,
+    limit,
+    cursor,
+    type,
+    from,
+    to
+) => {
+    const where = {
+        OR: [{ fromUserId: userId }, { toUserId: userId }],
+    };
 
-    // 2. Fetch transactions involving the user with pagination
+    // 1. Date range filter
+    if (from || to) {
+        where.createdAt = {};
+        if (from) where.createdAt.gte = new Date(from);
+        if (to) where.createdAt.lte = new Date(to);
+    }
+
+    // 2. Fetch transactions involving the user with cursor-based pagination
     const transactions = await prisma.transaction.findMany({
-        where: {
-            OR: [{ fromUserId: userId }, { toUserId: userId }],
-        },
-        orderBy: {
-            createdAt: "desc",
-        },
-        skip,
-        take: limit,
+        where,
+        orderBy: { id: "desc" },
+        take: limit + 1,
+        ...(cursor && {
+            cursor: { id: cursor },
+            skip: 1,
+        }),
     });
 
-    // 3.Calculate total transactions
-    const totalTransactions = await prisma.transaction.count({
-        where: {
-            OR: [{ fromUserId: userId }, { toUserId: userId }],
-        },
-    });
+    // 3. Determine if there's a next page
+    const hasNextPage = transactions.length > limit;
+    if (hasNextPage) transactions.pop();
 
     // 4. Format transactions
-    const formattedTransactions = transactions.map((tx) => {
+    let formatted = transactions.map((tx) => {
         const isSender = tx.fromUserId === userId;
-
         return {
             id: tx.id,
-            direction: isSender ? "SENT" : "RECEIVED",
-            signedAmount: isSender ? -tx.amount : + tx.amount,
+            amount: tx.amount,
+            direction: isSender ? "SEND" : "RECEIVE",
+            signedAmount: isSender ? -tx.amount : +tx.amount,
             status: tx.status,
             createdAt: tx.createdAt,
             fromUserId: tx.fromUserId,
@@ -109,12 +120,17 @@ export const getTransactionHistoryService = async (userId, page, limit) => {
         };
     });
 
-    // 5. Return formatted transactions with pagination info
+    // 5. Type filter (SEND / RECEIVE)
+    if (type === "SEND") {
+        formatted = formatted.filter((t) => t.direction === "SEND");
+    }
+    if (type === "RECEIVE") {
+        formatted = formatted.filter((t) => t.direction === "RECEIVE");
+    }
+
+    // 6. Return formatted transactions with next cursor
     return {
-        page,
-        limit,
-        totalPages: Math.ceil(totalTransactions / limit),
-        total: totalTransactions,
-        transactions: formattedTransactions,
+        transactions: formatted,
+        nextCursor: hasNextPage ? formatted[formatted.length - 1].id : null,
     };
 };
