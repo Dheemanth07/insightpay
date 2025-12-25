@@ -19,12 +19,12 @@ model User{
   email String @unique
   password String
   balance Decimal @default(0)
-
-  sentTransactions Transaction[] @relation("SentTransactions")
-  receivedTransactions Transaction[] @relation("ReceivedTransactions")
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  sentTransactions Transaction[] @relation("SentTransactions")
+  receivedTransactions Transaction[] @relation("ReceivedTransactions")
+  cards Card[]
 }
 
 model Transaction{
@@ -53,4 +53,17 @@ enum TxnStatus{
   PENDING
   SUCCESS
   FAILED
+}
+
+model Card{
+  id String @id @default(uuid())
+  userId Int 
+  cardToken String @unique
+  last4 String
+  brand String
+  expiryMonth Int
+  expiryYear Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields:[userId],references:[id])
 }
