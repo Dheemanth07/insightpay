@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import authRoutes from "./routes/auth.routes.js";
 import walletRoutes from "./routes/wallet.routes.js";
+import cardRoutes from "./routes/card.routes.js";
 
 const app = express();
 
@@ -17,5 +18,7 @@ app.get("/", (req, res) => {
 app.use("/auth", authRoutes);
 
 app.use("/wallet", walletRoutes);
+
+app.use("/cards", cardRoutes);
 
 export default app;
