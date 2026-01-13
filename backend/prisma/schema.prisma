@@ -29,30 +29,42 @@ model User{
 
 model Transaction{
   id Int @id @default(autoincrement())
+
+  reference String? @unique
   amount Decimal
+
   type TxnType
   status TxnStatus
+
   fromUserId Int?
   fromUser User? @relation("SentTransactions",fields: [fromUserId],references: [id])
+
   toUserId Int?
   toUser User? @relation("ReceivedTransactions",fields: [toUserId],references: [id])
+
+  qrExpiresAt DateTime?
+
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([fromUserId])
   @@index([toUserId])
   @@index([createdAt])
+  @@index([reference])
 }
 
 enum TxnType{
   ADD
   SEND
   RECEIVE
+  QR
 }
 
 enum TxnStatus{
   PENDING
   SUCCESS
   FAILED
+  EXPIRED
 }
 
 model Card{
