@@ -9,7 +9,7 @@ export const authMiddleware = (req, res, next) => {
         if (!authHeader || !authHeader.startsWith("Bearer "))
             return res
                 .status(401)
-                .json({ message: "Authorizatoin header missing" });
+                .json({ message: "Authorization header missing" });
 
         // 3. Extract token
         const token = authHeader.split(" ")[1];
